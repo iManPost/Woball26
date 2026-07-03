@@ -1,127 +1,51 @@
 <html>
 <head>
-<title>Player </title>
+<title>.Player M.PD H.BO</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,shrink-to-fit=no">
-
-<!-- DPlayer + dash.js (ตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
-<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.css">
-<script src="//cdn.jsdelivr.net/npm/dashjs@4.7.1/dist/dash.all.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.js"></script>
-
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    background-color: #000000;
-    height: 100%;
-    overflow: hidden;
-}
-#player {
-    width: 100%;
-    height: 100vh;
-}
-
-/* ===== ปรับแต่งหน้าตาตัวเล่นให้สวยขึ้น ===== */
-.dplayer-controller-mask {
-    background-image: linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,.75) 100%) !important;
-    height: 120px !important;
-}
-.dplayer-controller {
-    padding: 0 16px !important;
-}
-.dplayer-bar-wrap {
-    padding: 6px 0 !important;
-}
-.dplayer-bar-wrap:hover .dplayer-bar {
-    height: 5px !important;
-}
-.dplayer-played {
-    background-color: #ff0 !important;
-}
-.dplayer-thumb {
-    background-color: #ff0 !important;
-    box-shadow: 0 0 6px rgba(255,255,0,.7) !important;
-}
-.dplayer-volume-bar-inner-fill {
-    background-color: #ff0 !important;
-}
-.dplayer-icon svg {
-    transition: transform .15s ease;
-}
-.dplayer-icon:hover svg {
-    transform: scale(1.15);
-}
-.dplayer-menu, .dplayer-setting-box {
-    background: rgba(20,20,20,.95) !important;
-    border-radius: 8px !important;
-}
-.dplayer-full-icon svg,
-.dplayer-play-icon svg,
-.dplayer-pause-icon svg {
-    filter: drop-shadow(0 0 2px rgba(0,0,0,.6));
-}
-.dplayer-loading-icon {
-    filter: drop-shadow(0 0 4px #ff0);
+<link rel="stylesheet" type="text/css" href="/clap.css">
+<script src="//cdn.jsdelivr.net/npm/@clappr/player@0.4.0/dist/clappr.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/mux.js@5.6.7/dist/mux.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/level-selector@latest/dist/level-selector.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/clappr-pip@latest/dist/clappr-pip.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/clappr-playback-rate-plugin@latest/dist/clappr-playback-rate-plugin.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/shaka-player@2.5.10/dist/shaka-player.compiled.min.js"></script>
+<script src="//cdn.jsdelivr.net/gh/clappr/dash-shaka-playback@latest/dist/dash-shaka-playback.external.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/cdnbye-shaka@latest"></script>
+<style> 
+body {
+    background-color: #e8e8e8;
 }
 </style>
 </head>
-<body>
-
 <div id="player"></div>
-
 <script>
-  // ===== ค่าเดิมจากไฟล์ต้นฉบับ (คงไว้ตามเดิม) =====
-  var SOURCE_URL = 'https://dash2.antik.sk/stream/nvidia_joj_sport/playlist_cenc.mpd';
-  var CLEARKEY_ID  = '11223344556677889900112233445566';
-  var CLEARKEY_KEY = '4b80724d0ef86bcb2c21f7999d67739d';
-  // ================================================
-
-  const dp = new DPlayer({
-      container: document.getElementById('player'),
-      autoplay: true,
-      theme: '#ff0',
-      screenshot: true,
-      hotkey: true,
-      preload: 'auto',
-      volume: 0.8,
-      mutex: true,
-      video: {
-          url: SOURCE_URL,
-          type: 'customDash',
-          customType: {
-              // ตัวจัดการสำหรับ DASH streaming + DRM ClearKey (ทดแทน Clappr เดิม)
-              customDash: function (video, player) {
-                  const dashPlayer = dashjs.MediaPlayer().create();
-
-                  // สำคัญ: ต้อง initialize ก่อนโดยยังไม่ใส่ url,
-                  // แล้วตั้งค่า DRM (setProtectionData) ก่อน attachSource เสมอ
-                  // มิฉะนั้น dash.js จะไม่รู้จักคีย์ ClearKey แล้วพยายาม
-                  // ไปขอ license จากเซิร์ฟเวอร์แทน จนเกิด error
-                  // "DRM: No license server URL specified!"
-                  dashPlayer.initialize(video, null, true);
-
-                  dashPlayer.setProtectionData({
-                      'org.w3.clearkey': {
-                          clearkeys: {
-                              [CLEARKEY_ID]: CLEARKEY_KEY
-                          }
-                      }
-                  });
-
-                  dashPlayer.attachSource(SOURCE_URL);
-
-                  player.dash = dashPlayer;
+  var player = new Clappr.Player({
+          source: 'https://dash2.antik.sk/stream/nvidia_joj_sport/playlist_cenc.mpd',
+          mimeType: 'application/dash+xml',
+          height: '400px',
+          width: '600px',
+          autoPlay: true,
+          plugins: [LevelSelector, DashShakaPlayback, Clappr.MediaControl],
+          events: {onReady: function() {var plugin = this.getPlugin('click_to_pause'); plugin && plugin.disable();},},
+          chromecast: {
+              preload: 'metadata',
+              contentType: 'video/mpd',
+          },
+          shakaConfiguration: {
+              drm: {
+              clearKeys: {
+					'11223344556677889900112233445566':'4b80724d0ef86bcb2c21f7999d67739d'		
+                  }
               },
           },
-      },
-  });
-</script>
-
-<!-- ===== ส่วนเครดิตเดิม (คงไว้ตามเดิม) ===== -->
-<span style='position:absolute;bottom:10px;right:20px;font-size: 15px; font-weight: bold;color: #ff0;'><em> By </em></span>
-<center>
-<p><ins>By </ins></p>
-</center>
-
-</body>
+          shakaOnBeforeLoad: function (shaka_player) {},
+          parentId: '#player'
+      });
+	  
+  </script>
+    <span style='position:absolute;bottom:10px;right:20px;font-size: 15px; font-weight: bold;color: #ff002b;'><em>joj By NETI</em></span>
+   <center>
+  <p><ins>H.B.O Hit By NETI</ins></p>
+   </center>
 </html>
