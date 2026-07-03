@@ -3,7 +3,7 @@
 <title>Player </title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,shrink-to-fit=no">
 
-<!-- DPlayer + dash.js (เปลี่ยนตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
+<!-- DPlayer + dash.js (ตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.css">
 <script src="//cdn.jsdelivr.net/npm/dashjs@4.7.1/dist/dash.all.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.js"></script>
@@ -14,10 +14,54 @@ html, body {
     padding: 0;
     background-color: #000000;
     height: 100%;
+    overflow: hidden;
 }
 #player {
     width: 100%;
     height: 100vh;
+}
+
+/* ===== ปรับแต่งหน้าตาตัวเล่นให้สวยขึ้น ===== */
+.dplayer-controller-mask {
+    background-image: linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,.75) 100%) !important;
+    height: 120px !important;
+}
+.dplayer-controller {
+    padding: 0 16px !important;
+}
+.dplayer-bar-wrap {
+    padding: 6px 0 !important;
+}
+.dplayer-bar-wrap:hover .dplayer-bar {
+    height: 5px !important;
+}
+.dplayer-played {
+    background-color: #ff0 !important;
+}
+.dplayer-thumb {
+    background-color: #ff0 !important;
+    box-shadow: 0 0 6px rgba(255,255,0,.7) !important;
+}
+.dplayer-volume-bar-inner-fill {
+    background-color: #ff0 !important;
+}
+.dplayer-icon svg {
+    transition: transform .15s ease;
+}
+.dplayer-icon:hover svg {
+    transform: scale(1.15);
+}
+.dplayer-menu, .dplayer-setting-box {
+    background: rgba(20,20,20,.95) !important;
+    border-radius: 8px !important;
+}
+.dplayer-full-icon svg,
+.dplayer-play-icon svg,
+.dplayer-pause-icon svg {
+    filter: drop-shadow(0 0 2px rgba(0,0,0,.6));
+}
+.dplayer-loading-icon {
+    filter: drop-shadow(0 0 4px #ff0);
 }
 </style>
 </head>
@@ -48,7 +92,14 @@ html, body {
               // ตัวจัดการสำหรับ DASH streaming + DRM ClearKey (ทดแทน Clappr เดิม)
               customDash: function (video, player) {
                   const dashPlayer = dashjs.MediaPlayer().create();
-                  dashPlayer.initialize(video, SOURCE_URL, true);
+
+                  // สำคัญ: ต้อง initialize ก่อนโดยยังไม่ใส่ url,
+                  // แล้วตั้งค่า DRM (setProtectionData) ก่อน attachSource เสมอ
+                  // มิฉะนั้น dash.js จะไม่รู้จักคีย์ ClearKey แล้วพยายาม
+                  // ไปขอ license จากเซิร์ฟเวอร์แทน จนเกิด error
+                  // "DRM: No license server URL specified!"
+                  dashPlayer.initialize(video, null, true);
+
                   dashPlayer.setProtectionData({
                       'org.w3.clearkey': {
                           clearkeys: {
@@ -56,6 +107,9 @@ html, body {
                           }
                       }
                   });
+
+                  dashPlayer.attachSource(SOURCE_URL);
+
                   player.dash = dashPlayer;
               },
           },
