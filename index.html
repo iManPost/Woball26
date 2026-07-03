@@ -3,9 +3,10 @@
 <title>Player </title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,shrink-to-fit=no">
 
-<!-- Artplayer + dash.js (เปลี่ยนตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
-<script src="//cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+<!-- DPlayer + dash.js (เปลี่ยนตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.css">
 <script src="//cdn.jsdelivr.net/npm/dashjs@4.7.1/dist/dash.all.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/dplayer@1.27.1/dist/DPlayer.min.js"></script>
 
 <style>
 html, body {
@@ -31,39 +32,32 @@ html, body {
   var CLEARKEY_KEY = '4b80724d0ef86bcb2c21f7999d67739d';
   // ================================================
 
-  const art = new Artplayer({
-      container: '#player',
-      url: SOURCE_URL,
-      type: 'dash',
+  const dp = new DPlayer({
+      container: document.getElementById('player'),
       autoplay: true,
-      autoSize: true,
-      autoMini: true,
-      setting: true,
-      fullscreen: true,
-      fullscreenWeb: true,
-      pip: true,
-      playbackRate: true,
-      aspectRatio: true,
-      screenshot: true,
-      lock: true,
-      miniProgressBar: true,
-      mutex: true,
-      backdrop: true,
       theme: '#ff0',
-
-      // ตัวจัดการสำหรับ DASH streaming + DRM ClearKey (ทดแทน Clappr เดิม)
-      customType: {
-          dash: function (video, url) {
-              const dashPlayer = dashjs.MediaPlayer().create();
-              dashPlayer.initialize(video, url, true);
-              dashPlayer.setProtectionData({
-                  'org.w3.clearkey': {
-                      clearkeys: {
-                          [CLEARKEY_ID]: CLEARKEY_KEY
+      screenshot: true,
+      hotkey: true,
+      preload: 'auto',
+      volume: 0.8,
+      mutex: true,
+      video: {
+          url: SOURCE_URL,
+          type: 'customDash',
+          customType: {
+              // ตัวจัดการสำหรับ DASH streaming + DRM ClearKey (ทดแทน Clappr เดิม)
+              customDash: function (video, player) {
+                  const dashPlayer = dashjs.MediaPlayer().create();
+                  dashPlayer.initialize(video, SOURCE_URL, true);
+                  dashPlayer.setProtectionData({
+                      'org.w3.clearkey': {
+                          clearkeys: {
+                              [CLEARKEY_ID]: CLEARKEY_KEY
+                          }
                       }
-                  }
-              });
-              art.dash = dashPlayer;
+                  });
+                  player.dash = dashPlayer;
+              },
           },
       },
   });
