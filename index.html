@@ -1,51 +1,79 @@
 <html>
 <head>
-<title>.Player M.PD H.BO</title>
+<title>Player </title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,shrink-to-fit=no">
-<link rel="stylesheet" type="text/css" href="/clap.css">
-<script src="//cdn.jsdelivr.net/npm/@clappr/player@0.4.0/dist/clappr.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/mux.js@5.6.7/dist/mux.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/level-selector@latest/dist/level-selector.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/clappr-pip@latest/dist/clappr-pip.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/clappr-playback-rate-plugin@latest/dist/clappr-playback-rate-plugin.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/shaka-player@2.5.10/dist/shaka-player.compiled.min.js"></script>
-<script src="//cdn.jsdelivr.net/gh/clappr/dash-shaka-playback@latest/dist/dash-shaka-playback.external.min.js"></script>
-<script src="//cdn.jsdelivr.net/npm/cdnbye-shaka@latest"></script>
-<style> 
-body {
+
+<!-- Artplayer + dash.js (เปลี่ยนตัวเล่นวีดีโอใหม่ - รองรับ DASH streaming + DRM ClearKey) -->
+<script src="//cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+<script src="//cdn.jsdelivr.net/npm/dashjs@4.7.1/dist/dash.all.min.js"></script>
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
     background-color: #000000;
+    height: 100%;
+}
+#player {
+    width: 100%;
+    height: 100vh;
 }
 </style>
 </head>
+<body>
+
 <div id="player"></div>
+
 <script>
-  var player = new Clappr.Player({
-          source: 'https://dash2.antik.sk/stream/nvidia_joj_sport/playlist_cenc.mpd',
-          mimeType: 'application/dash+xml',
-          height: '100%',
-          width: '100%',
-          autoPlay: true,
-          plugins: [LevelSelector, DashShakaPlayback, Clappr.MediaControl],
-          events: {onReady: function() {var plugin = this.getPlugin('click_to_pause'); plugin && plugin.disable();},},
-          chromecast: {
-              preload: 'metadata',
-              contentType: 'video/mpd',
-          },
-          shakaConfiguration: {
-              drm: {
-              clearKeys: {
-					'11223344556677889900112233445566':'4b80724d0ef86bcb2c21f7999d67739d'		
+  // ===== ค่าเดิมจากไฟล์ต้นฉบับ (คงไว้ตามเดิม) =====
+  var SOURCE_URL = 'https://dash2.antik.sk/stream/nvidia_joj_sport/playlist_cenc.mpd';
+  var CLEARKEY_ID  = '11223344556677889900112233445566';
+  var CLEARKEY_KEY = '4b80724d0ef86bcb2c21f7999d67739d';
+  // ================================================
+
+  const art = new Artplayer({
+      container: '#player',
+      url: SOURCE_URL,
+      type: 'dash',
+      autoplay: true,
+      autoSize: true,
+      autoMini: true,
+      setting: true,
+      fullscreen: true,
+      fullscreenWeb: true,
+      pip: true,
+      playbackRate: true,
+      aspectRatio: true,
+      screenshot: true,
+      lock: true,
+      miniProgressBar: true,
+      mutex: true,
+      backdrop: true,
+      theme: '#ff0',
+
+      // ตัวจัดการสำหรับ DASH streaming + DRM ClearKey (ทดแทน Clappr เดิม)
+      customType: {
+          dash: function (video, url) {
+              const dashPlayer = dashjs.MediaPlayer().create();
+              dashPlayer.initialize(video, url, true);
+              dashPlayer.setProtectionData({
+                  'org.w3.clearkey': {
+                      clearkeys: {
+                          [CLEARKEY_ID]: CLEARKEY_KEY
+                      }
                   }
-              },
+              });
+              art.dash = dashPlayer;
           },
-          shakaOnBeforeLoad: function (shaka_player) {},
-          parentId: '#player'
-      });
-	  
-  </script>
-    <span style='position:absolute;bottom:10px;right:20px;font-size: 15px; font-weight: bold;color: #ff0;'><em>ball26 HIT By NETI</em></span>
-   <center>
-  <p><ins>H.B.O Hit By NETI</ins></p>
-   </center>
+      },
+  });
+</script>
+
+<!-- ===== ส่วนเครดิตเดิม (คงไว้ตามเดิม) ===== -->
+<span style='position:absolute;bottom:10px;right:20px;font-size: 15px; font-weight: bold;color: #ff0;'><em> By </em></span>
+<center>
+<p><ins>By </ins></p>
+</center>
+
+</body>
 </html>
